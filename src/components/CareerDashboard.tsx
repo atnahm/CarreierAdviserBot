@@ -14,8 +14,17 @@ import {
   CheckCircle,
   AlertCircle,
   BarChart3,
-  Lightbulb
+  Lightbulb,
+  Zap,
+  Users,
+  Trophy,
+  Globe,
+  Video
 } from "lucide-react";
+import PredictiveRoadmap from "./PredictiveRoadmap";
+import SkillDemandHeatmap from "./SkillDemandHeatmap";
+import VirtualMentors from "./VirtualMentors";
+import CareerReputationScore from "./CareerReputationScore";
 
 interface AssessmentResults {
   skills: string[];
@@ -141,22 +150,46 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="recommendations" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 h-auto">
             <TabsTrigger value="recommendations" className="flex items-center space-x-2">
               <Target className="h-4 w-4" />
-              <span>Career Matches</span>
+              <span className="hidden sm:inline">Career Matches</span>
+              <span className="sm:hidden">Matches</span>
             </TabsTrigger>
             <TabsTrigger value="skills" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
-              <span>Skills Analysis</span>
+              <span className="hidden sm:inline">Skills Analysis</span>
+              <span className="sm:hidden">Skills</span>
             </TabsTrigger>
             <TabsTrigger value="learning" className="flex items-center space-x-2">
               <BookOpen className="h-4 w-4" />
-              <span>Learning Paths</span>
+              <span className="hidden sm:inline">Learning Paths</span>
+              <span className="sm:hidden">Learning</span>
             </TabsTrigger>
             <TabsTrigger value="insights" className="flex items-center space-x-2">
               <Lightbulb className="h-4 w-4" />
-              <span>AI Insights</span>
+              <span className="hidden sm:inline">AI Insights</span>
+              <span className="sm:hidden">Insights</span>
+            </TabsTrigger>
+            <TabsTrigger value="roadmap" className="flex items-center space-x-2">
+              <Zap className="h-4 w-4" />
+              <span className="hidden sm:inline">Future Careers</span>
+              <span className="sm:hidden">Future</span>
+            </TabsTrigger>
+            <TabsTrigger value="heatmap" className="flex items-center space-x-2">
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline">Skill Demand</span>
+              <span className="sm:hidden">Demand</span>
+            </TabsTrigger>
+            <TabsTrigger value="mentors" className="flex items-center space-x-2">
+              <Video className="h-4 w-4" />
+              <span className="hidden sm:inline">AI Mentors</span>
+              <span className="sm:hidden">Mentors</span>
+            </TabsTrigger>
+            <TabsTrigger value="reputation" className="flex items-center space-x-2">
+              <Trophy className="h-4 w-4" />
+              <span className="hidden sm:inline">Reputation</span>
+              <span className="sm:hidden">Score</span>
             </TabsTrigger>
           </TabsList>
 
@@ -454,6 +487,26 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Predictive Career Roadmap */}
+          <TabsContent value="roadmap">
+            <PredictiveRoadmap />
+          </TabsContent>
+
+          {/* Real-Time Skill Demand Heatmap */}
+          <TabsContent value="heatmap">
+            <SkillDemandHeatmap />
+          </TabsContent>
+
+          {/* AI-Simulated Career Mentors */}
+          <TabsContent value="mentors">
+            <VirtualMentors />
+          </TabsContent>
+
+          {/* Career Reputation & Network Score */}
+          <TabsContent value="reputation">
+            <CareerReputationScore />
           </TabsContent>
         </Tabs>
       </div>
