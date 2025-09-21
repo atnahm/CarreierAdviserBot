@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Target, TrendingUp, Users, Zap, CheckCircle } from "lucide-react";
@@ -19,6 +20,7 @@ interface AssessmentResults {
 const Index = () => {
   const [currentView, setCurrentView] = useState<"home" | "assessment" | "dashboard" | "chat">("home");
   const [assessmentResults, setAssessmentResults] = useState<AssessmentResults | null>(null);
+  const { user, logout, isAuthenticated } = useAuth();
 
   const handleStartAssessment = () => {
     setCurrentView("assessment");
@@ -122,9 +124,28 @@ const Index = () => {
             <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
             <a href="#results" className="text-muted-foreground hover:text-foreground transition-colors">Results</a>
           </nav>
-          <Button variant="outline" className="hover:bg-primary hover:text-primary-foreground">
-            Sign In
-          </Button>
+          {isAuthenticated ? (
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-muted-foreground">
+                Welcome, {user?.name || user?.email?.split('@')[0]}
+              </span>
+              <Button
+                variant="outline"
+                className="hover:bg-primary hover:text-primary-foreground"
+                onClick={logout}
+              >
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              className="hover:bg-primary hover:text-primary-foreground"
+              onClick={() => window.location.href = '/login'}
+            >
+              Sign In
+            </Button>
+          )}
         </div>
       </header>
 

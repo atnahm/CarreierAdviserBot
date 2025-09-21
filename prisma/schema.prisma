@@ -1,0 +1,128 @@
+// Prisma schema for Career Anthem AI platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  assessments Assessment[]
+  chats        Chat[]
+
+  @@map("users")
+}
+
+model Assessment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Skills data
+  skills    String     // JSON string - Array of skill strings
+
+  // Interests data
+  interests String     // JSON string - Array of interest strings
+
+  // Personality profile (Big Five traits)
+  personality String   // JSON string - Object with openness, conscientiousness, extraversion, agreeableness scores
+
+  // Experience and goals
+  experience String?
+  goals      String     // JSON string - Array of goal strings
+
+  // Assessment metadata
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  chats Chat[]
+
+  @@map("assessments")
+}
+
+model Chat {
+  id           String @id @default(cuid())
+  userId       String
+  user         User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessmentId String?
+  assessment   Assessment? @relation(fields: [assessmentId], references: [id])
+
+  // Chat session metadata
+  startedAt    DateTime @default(now())
+  lastActivity DateTime @updatedAt
+
+  // Relations
+  messages Message[]
+
+  @@map("chats")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  // Message content
+  content   String
+  sender    String   // "user" or "ai"
+  timestamp DateTime @default(now())
+
+  // AI-specific fields
+  suggestions String?  // JSON string - Array of suggested follow-up questions
+  metadata    String?  // JSON string - Additional AI metadata (confidence scores, etc.)
+
+  @@map("messages")
+}
+
+model SkillDemand {
+  id          String   @id @default(cuid())
+  skillName   String   @unique
+
+  // Market data
+  demandScore Float    // 0-100 scale
+  salary      Int      // Median salary in USD
+  growthRate  Float    // Percentage growth rate
+
+  // Update metadata
+  lastUpdated DateTime @default(now())
+
+  @@map("skill_demand")
+}
+
+model CareerPath {
+  id              String @id @default(cuid())
+  title           String @unique
+  description     String
+
+  // Required skills and interests
+  requiredSkills  String // JSON string - Array of skill strings
+  interests       String // JSON string - Array of compatible interests
+
+  // Market outlook
+  averageSalary   Int
+  jobGrowthRate   Float
+  demandLevel     String // "low", "medium", "high"
+
+  // Career trajectory
+  entryLevel      String?
+  experienced     String?
+  senior          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("career_paths")
+}

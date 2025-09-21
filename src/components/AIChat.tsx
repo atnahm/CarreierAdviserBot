@@ -6,6 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Send, Bot, User, ArrowLeft, Lightbulb, TrendingUp, BookOpen } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiClient } from "@/lib/api";
 
 interface Message {
   id: string;
@@ -20,107 +22,119 @@ interface AIChatProps {
 }
 
 const AIChat = ({ onBack }: AIChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Hello! I'm your AI Career Advisor. I've analyzed your assessment results and I'm here to help you with personalized career guidance. What would you like to discuss?",
-      sender: "ai",
-      timestamp: new Date(),
-      suggestions: [
-        "Tell me more about AI/ML Engineer path",
-        "How can I improve my missing skills?",
-        "What's the job market like for my interests?",
-        "Help me create a career transition plan",
-      ],
-    },
-  ]);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [chatSession, setChatSession] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    initializeChat();
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   }, [messages]);
 
+  const initializeChat = async () => {
+    try {
+      setIsLoading(true);
+      // Try to get existing chat sessions
+      const chats = await apiClient.getUserChats();
+      if (chats.chats && chats.chats.length > 0) {
+        // For now, use the most recent chat
+        const latestChat = chats.chats[0];
+        setChatSession(latestChat);
+
+        // Load chat messages
+        const messagesResponse = await apiClient.getChatMessages(latestChat.id);
+        const formattedMessages: Message[] = messagesResponse.messages.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          sender: msg.sender as "user" | "ai",
+          timestamp: new Date(msg.timestamp),
+          suggestions: msg.suggestions,
+        }));
+        setMessages(formattedMessages);
+      } else {
+        // Create new chat session
+        const newChat = await apiClient.createChatSession();
+        setChatSession(newChat.chat);
+
+        // Add welcome message
+        const welcomeMessage: Message = {
+          id: "welcome",
+          content: "Hello! I'm your AI Career Advisor. I've analyzed your assessment results and I'm here to help you with personalized career guidance. What would you like to discuss?",
+          sender: "ai",
+          timestamp: new Date(),
+          suggestions: [
+            "Tell me more about AI/ML Engineer path",
+            "How can I improve my missing skills?",
+            "What's the job market like for my interests?",
+            "Help me create a career transition plan",
+          ],
+        };
+        setMessages([welcomeMessage]);
+      }
+    } catch (error) {
+      console.error('Failed to initialize chat:', error);
+      // Fallback welcome message
+      setMessages([{
+        id: "welcome",
+        content: "Welcome! I'm here to help you with career guidance. Please try logging in first.",
+        sender: "ai",
+        timestamp: new Date(),
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSendMessage = async (content: string) => {
-    if (!content.trim()) return;
+    if (!content.trim() || !chatSession) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: content.trim(),
-      sender: "user",
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
     setNewMessage("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(content);
-      setMessages(prev => [...prev, aiResponse]);
+    try {
+      // Send message to backend and get AI response
+      const response = await apiClient.sendChatMessage(chatSession.id, content);
+
+      // Add user message to local state
+      const userMessage: Message = {
+        id: response.userMessage.id,
+        content: response.userMessage.content,
+        sender: response.userMessage.sender,
+        timestamp: new Date(response.userMessage.timestamp),
+      };
+
+      // Add AI response to local state
+      const aiMessage: Message = {
+        id: response.aiMessage.id,
+        content: response.aiMessage.content,
+        sender: response.aiMessage.sender,
+        timestamp: new Date(response.aiMessage.timestamp),
+        suggestions: response.suggestions,
+      };
+
+      setMessages(prev => [...prev, userMessage, aiMessage]);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // Show error message
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: "I'm sorry, I encountered an error processing your message. Please try again.",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500 + Math.random() * 1000);
-  };
-
-  const generateAIResponse = (userMessage: string): Message => {
-    // Simple mock AI responses based on keywords
-    let response = "";
-    let suggestions: string[] = [];
-
-    if (userMessage.toLowerCase().includes("ai") || userMessage.toLowerCase().includes("ml") || userMessage.toLowerCase().includes("engineer")) {
-      response = "Great choice! As an AI/ML Engineer, you'll be at the forefront of technology innovation. Based on your assessment, you have strong programming fundamentals which is excellent. Here's what I recommend:\n\n✅ Your Python and JavaScript skills are perfect starting points\n⚡ Focus on learning TensorFlow/PyTorch for deep learning\n📊 Strengthen your statistics and linear algebra foundation\n🐳 Docker and Kubernetes are crucial for MLOPs - high priority\n\nThe job market is extremely hot right now with 22% growth projected. Would you like me to create a detailed 6-month learning roadmap?";
-      suggestions = [
-        "Create a 6-month ML learning plan",
-        "Show me ML Engineer job openings",
-        "What ML projects should I build?",
-        "How much can I earn as an ML Engineer?",
-      ];
-    } else if (userMessage.toLowerCase().includes("skill") || userMessage.toLowerCase().includes("improve") || userMessage.toLowerCase().includes("learn")) {
-      response = "Perfect question! Based on your skills gap analysis, here's my prioritized recommendation:\n\n🎯 **High Priority Skills (Next 3 months):**\n• Docker & Kubernetes - Essential for modern deployment\n• System Design - Critical for senior roles\n• MLOps - Bridges development to production\n\n📚 **Learning Strategy:**\n• Hands-on projects beat theory every time\n• Contribute to open-source ML projects\n• Build and deploy at least 3 end-to-end ML applications\n\nYour learning style (high openness score) suggests you'll excel with experimental, project-based learning. Want specific course recommendations?";
-      suggestions = [
-        "Give me specific course recommendations",
-        "How long will it take to learn these skills?",
-        "What projects should I build?",
-        "Find me mentors in ML field",
-      ];
-    } else if (userMessage.toLowerCase().includes("job") || userMessage.toLowerCase().includes("market") || userMessage.toLowerCase().includes("salary")) {
-      response = "The job market analysis for your profile is very promising! Here's the current landscape:\n\n💰 **Salary Ranges:**\n• AI/ML Engineer: $120K-$180K (your top match)\n• Product Manager: $110K-$160K  \n• UX Designer: $85K-$130K\n\n📈 **Market Trends:**\n• AI roles growing 22% annually\n• 89% offer remote work options\n• Average response rate: 73% for qualified candidates\n\n🏢 **Hot Companies Hiring:**\nGoogle, Microsoft, OpenAI, Tesla are actively recruiting. Your technical background + high conscientiousness score makes you very attractive to employers.";
-      suggestions = [
-        "Show me current job openings",
-        "How to optimize my resume for AI roles?",
-        "What interview questions should I expect?",
-        "Help me negotiate my salary",
-      ];
-    } else if (userMessage.toLowerCase().includes("transition") || userMessage.toLowerCase().includes("plan") || userMessage.toLowerCase().includes("roadmap")) {
-      response = "Let's create your personalized career transition roadmap! Based on your profile, here's a strategic 6-month plan:\n\n🗓️ **Month 1-2: Foundation Building**\n• Complete Docker/Kubernetes course\n• Build first ML project end-to-end\n• Update portfolio and LinkedIn\n\n🗓️ **Month 3-4: Skill Deepening**\n• Advanced ML algorithms course\n• Contribute to 2 open-source projects\n• Network with ML professionals\n\n🗓️ **Month 5-6: Job Market Entry**\n• Apply to target companies\n• Technical interview preparation\n• Salary negotiation practice\n\nYour high conscientiousness suggests you'll excel with structured timelines. Ready to dive deeper into any specific month?";
-      suggestions = [
-        "Detail Month 1-2 specific tasks",
-        "Help me find open-source projects",
-        "Create a networking strategy",
-        "Practice technical interviews",
-      ];
-    } else {
-      response = "I understand you're looking for career guidance. As your AI advisor, I'm here to help with:\n\n🎯 **Career Path Optimization**\n📊 **Skills Development Strategy** \n💼 **Job Market Intelligence**\n🚀 **Transition Planning**\n📈 **Salary Negotiation**\n\nBased on your assessment, you're well-positioned for success in AI/ML roles. Your combination of technical skills, high openness to experience, and strong problem-solving abilities align perfectly with the current market demands.\n\nWhat specific aspect of your career journey would you like to focus on?";
-      suggestions = [
-        "Help me choose between career paths",
-        "Create a skill development plan",
-        "Show me salary negotiation tips",
-        "Find networking opportunities",
-      ];
     }
-
-    return {
-      id: Date.now().toString(),
-      content: response,
-      sender: "ai",
-      timestamp: new Date(),
-      suggestions,
-    };
   };
+
+
 
   const handleSuggestionClick = (suggestion: string) => {
     handleSendMessage(suggestion);
