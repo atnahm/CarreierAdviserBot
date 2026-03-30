@@ -1,17 +1,33 @@
-// Prisma schema for Career Anthem AI platform
+// Prisma schema for CareerAdviser platform
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Client {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  domain      String?  @unique
+  databaseUrl String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users User[]
+
+  @@map("clients")
 }
 
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  email     String
   password  String
   name      String?
   createdAt DateTime @default(now())
@@ -21,11 +37,13 @@ model User {
   assessments Assessment[]
   chats        Chat[]
 
+  @@unique([email, clientId])
   @@map("users")
 }
 
 model Assessment {
   id        String   @id @default(cuid())
+  clientId  String
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -55,6 +73,7 @@ model Assessment {
 
 model Chat {
   id           String @id @default(cuid())
+  clientId     String
   userId       String
   user         User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   assessmentId String?
@@ -72,6 +91,7 @@ model Chat {
 
 model Message {
   id        String   @id @default(cuid())
+  clientId  String
   chatId    String
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
 

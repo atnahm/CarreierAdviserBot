@@ -115,7 +115,7 @@ const Index = () => {
             <div className="p-2 bg-gradient-primary rounded-lg">
               <Brain className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent font-cursive">
               CareerAI
             </span>
           </div>
@@ -162,7 +162,7 @@ const Index = () => {
                 </Badge>
                 <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
                   Transform Your Career with{" "}
-                  <span className="bg-gradient-primary bg-clip-text text-transparent">
+                  <span className="bg-gradient-primary bg-clip-text text-transparent font-cursive">
                     AI Intelligence
                   </span>
                 </h1>

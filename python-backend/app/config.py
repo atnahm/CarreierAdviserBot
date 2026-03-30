@@ -8,7 +8,10 @@ class Settings(BaseModel):
     cors_origins: List[str] = Field(default=["http://localhost:3000", "http://localhost:3001"], alias="CORS_ORIGINS")
 
     # Database
-    database_url: str = Field(default="sqlite+aiosqlite:///./career_anthem.db", alias="DATABASE_URL")
+    database_url: str = Field(default="postgresql+asyncpg://postgres:password@localhost:5432/careeradviser", alias="DATABASE_URL")
+
+    # Redis
+    redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
 
     # JWT settings
     secret_key: str = Field(default="your-secret-key-change-this-in-production", alias="SECRET_KEY")

@@ -129,18 +129,16 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
   const selectedCareerData = careerRecommendations[selectedCareer];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-violet-100 to-cyan-100">
       {/* Header */}
-      <div className="border-b border-border/40 bg-background/95 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
+      <div className="glass-panel border border-white/30 mx-4 mt-6 mb-6 p-4 md:p-6 md:mx-12">
+        <div className="container mx-auto px-2 py-2 md:px-4 md:py-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Your AI Career Analysis</h1>
-              <p className="text-muted-foreground mt-1">
-                Personalized recommendations based on your unique profile
-              </p>
+              <h1 className="text-3xl md:text-5xl headline-bauhaus">Your <span className="bauhaus-underline">AI Career Analysis</span></h1>
+              <p className="text-muted-foreground mt-2 text-sm md:text-base">Personalized recommendations based on your unique profile</p>
             </div>
-            <Button onClick={onStartChat} className="bg-gradient-primary hover:shadow-glow">
+            <Button onClick={onStartChat} className="glass-badge text-white px-6 py-2 font-semibold transition transform hover:-translate-y-1 hover:shadow-glow bg-gradient-primary">
               <MessageCircle className="h-4 w-4 mr-2" />
               Chat with AI Advisor
             </Button>
@@ -149,44 +147,44 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="recommendations" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 h-auto">
-            <TabsTrigger value="recommendations" className="flex items-center space-x-2">
+        <Tabs defaultValue="recommendations" className="space-y-8">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 glass-card p-1">
+            <TabsTrigger value="recommendations" className="flex items-center justify-center space-x-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-white hover:bg-gradient-to-r from-cyan-500 to-blue-500 transition">
               <Target className="h-4 w-4" />
               <span className="hidden sm:inline">Career Matches</span>
               <span className="sm:hidden">Matches</span>
             </TabsTrigger>
-            <TabsTrigger value="skills" className="flex items-center space-x-2">
+            <TabsTrigger value="skills" className="flex items-center justify-center space-x-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-white hover:bg-gradient-to-r from-cyan-500 to-blue-500 transition">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Skills Analysis</span>
               <span className="sm:hidden">Skills</span>
             </TabsTrigger>
-            <TabsTrigger value="learning" className="flex items-center space-x-2">
+            <TabsTrigger value="learning" className="flex items-center justify-center space-x-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-white hover:bg-gradient-to-r from-cyan-500 to-blue-500 transition">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Learning Paths</span>
               <span className="sm:hidden">Learning</span>
             </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center space-x-2">
+            <TabsTrigger value="insights" className="flex items-center justify-center space-x-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-white hover:bg-gradient-to-r from-cyan-500 to-blue-500 transition">
               <Lightbulb className="h-4 w-4" />
               <span className="hidden sm:inline">AI Insights</span>
               <span className="sm:hidden">Insights</span>
             </TabsTrigger>
-            <TabsTrigger value="roadmap" className="flex items-center space-x-2">
+            <TabsTrigger value="roadmap" className="flex items-center justify-center space-x-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-white hover:bg-gradient-to-r from-cyan-500 to-blue-500 transition">
               <Zap className="h-4 w-4" />
               <span className="hidden sm:inline">Future Careers</span>
               <span className="sm:hidden">Future</span>
             </TabsTrigger>
-            <TabsTrigger value="heatmap" className="flex items-center space-x-2">
+            <TabsTrigger value="heatmap" className="flex items-center justify-center space-x-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-white hover:bg-gradient-to-r from-cyan-500 to-blue-500 transition">
               <Globe className="h-4 w-4" />
               <span className="hidden sm:inline">Skill Demand</span>
               <span className="sm:hidden">Demand</span>
             </TabsTrigger>
-            <TabsTrigger value="mentors" className="flex items-center space-x-2">
+            <TabsTrigger value="mentors" className="flex items-center justify-center space-x-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-white hover:bg-gradient-to-r from-cyan-500 to-blue-500 transition">
               <Video className="h-4 w-4" />
               <span className="hidden sm:inline">AI Mentors</span>
               <span className="sm:hidden">Mentors</span>
             </TabsTrigger>
-            <TabsTrigger value="reputation" className="flex items-center space-x-2">
+            <TabsTrigger value="reputation" className="flex items-center justify-center space-x-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-white hover:bg-gradient-to-r from-cyan-500 to-blue-500 transition">
               <Trophy className="h-4 w-4" />
               <span className="hidden sm:inline">Reputation</span>
               <span className="sm:hidden">Score</span>
@@ -200,10 +198,10 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
               <div className="lg:col-span-1 space-y-4">
                 <h2 className="text-xl font-semibold">Top Career Matches</h2>
                 {careerRecommendations.map((career, index) => (
-                  <Card 
-                    key={index} 
-                    className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      selectedCareer === index ? 'ring-2 ring-ai-primary shadow-ai' : ''
+                  <Card
+                    key={index}
+                    className={`glass-card cursor-pointer transition-all duration-300 ${
+                      selectedCareer === index ? 'ring-2 ring-ai-primary shadow-glow' : 'hover:shadow-md'
                     }`}
                     onClick={() => setSelectedCareer(index)}
                   >
@@ -236,7 +234,7 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
 
               {/* Selected Career Details */}
               <div className="lg:col-span-2">
-                <Card className="h-fit">
+                <Card className="glass-card h-fit liquid-motion">
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
@@ -343,7 +341,7 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
           {/* Skills Analysis */}
           <TabsContent value="skills" className="space-y-6">
             <div className="grid md:grid-cols-3 gap-6">
-              <Card>
+              <Card className="glass-card">
                 <CardHeader>
                   <CardTitle className="text-green-600">Strong Skills</CardTitle>
                   <CardDescription>Your current competencies</CardDescription>
@@ -362,7 +360,7 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="glass-card">
                 <CardHeader>
                   <CardTitle className="text-yellow-600">Developing Skills</CardTitle>
                   <CardDescription>Areas for improvement</CardDescription>
@@ -381,7 +379,7 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="glass-card">
                 <CardHeader>
                   <CardTitle className="text-red-600">Skills to Learn</CardTitle>
                   <CardDescription>Missing competencies</CardDescription>
@@ -406,7 +404,7 @@ const CareerDashboard = ({ results, onStartChat }: CareerDashboardProps) => {
           <TabsContent value="learning" className="space-y-6">
             <div className="grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {learningPaths.map((course, index) => (
-                <Card key={index} className="hover:shadow-md transition-shadow">
+                <Card key={index} className="glass-card hover:-translate-y-1 hover:shadow-glow transition-transform duration-300">
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-lg">{course.title}</CardTitle>

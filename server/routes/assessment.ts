@@ -1,9 +1,24 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { getTenantPrismaClient } from '../utils/tenant.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+const getPrismaClientForRequest = async (req: AuthRequest): Promise<PrismaClient> => {
+  const clientId = req.user?.clientId;
+  if (!clientId) {
+    throw new Error('Missing clientId in user token');
+  }
+
+  const client = await prisma.client.findUnique({ where: { id: clientId } });
+  if (!client?.databaseUrl) {
+    throw new Error('Client database URL not found');
+  }
+
+  return getTenantPrismaClient(client.databaseUrl);
+};
 
 // Create new assessment
 router.post('/', authenticateToken, async (req: AuthRequest, res) => {
@@ -18,10 +33,13 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       });
     }
 
+    const tenantPrisma = await getPrismaClientForRequest(req);
+
     // Create assessment
-    const assessment = await prisma.assessment.create({
+    const assessment = await tenantPrisma.assessment.create({
       data: {
         userId,
+        clientId: req.user!.clientId!,
         skills,
         interests,
         personality,
@@ -45,8 +63,10 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
 
-    const assessments = await prisma.assessment.findMany({
-      where: { userId },
+    const tenantPrisma = await getPrismaClientForRequest(req);
+
+    const assessments = await tenantPrisma.assessment.findMany({
+      where: { userId, clientId: req.user!.clientId },
       orderBy: { createdAt: 'desc' },
       include: {
         chats: {
@@ -74,10 +94,13 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
     const assessmentId = req.params.id;
     const userId = req.user!.id;
 
-    const assessment = await prisma.assessment.findFirst({
+    const tenantPrisma = await getPrismaClientForRequest(req);
+
+    const assessment = await tenantPrisma.assessment.findFirst({
       where: {
         id: assessmentId,
         userId,
+        clientId: req.user!.clientId,
       },
       include: {
         chats: {
@@ -109,10 +132,13 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     const { skills, interests, personality, experience, goals } = req.body;
 
     // Check if assessment belongs to user
-    const existingAssessment = await prisma.assessment.findFirst({
+    const tenantPrisma = await getPrismaClientForRequest(req);
+
+    const existingAssessment = await tenantPrisma.assessment.findFirst({
       where: {
         id: assessmentId,
         userId,
+        clientId: req.user!.clientId,
       },
     });
 
@@ -121,7 +147,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Update assessment
-    const assessment = await prisma.assessment.update({
+    const assessment = await tenantPrisma.assessment.update({
       where: { id: assessmentId },
       data: {
         skills: skills || existingAssessment.skills,
@@ -161,7 +187,8 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Delete assessment (cascade will handle related data)
-    await prisma.assessment.delete({
+    const tenantPrisma = await getPrismaClientForRequest(req);
+    await tenantPrisma.assessment.delete({
       where: { id: assessmentId },
     });
 

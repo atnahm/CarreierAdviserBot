@@ -123,3 +123,125 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: clamp(0.75rem, 1.5vw, 1rem);
+    transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+  }
+
+  .glass-panel:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 24px 50px rgba(15, 23, 42, 0.18);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  .glass-card {
+    @apply bg-card/70 border border-border/40 shadow-xl;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+    transition: transform 280ms ease 0s, box-shadow 280ms ease 0s;
+  }
+
+  .glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.2);
+  }
+
+  .bauhaus-underline {
+    display: inline-block;
+    position: relative;
+  }
+
+  .bauhaus-underline::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 0.22rem;
+    background: linear-gradient(90deg, hsl(345 100% 60%), hsl(214 100% 50%), hsl(48 100% 60%));
+    border-radius: 999px;
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 250ms ease;
+  }
+
+  .bauhaus-underline:hover::after {
+    transform: scaleX(1);
+  }
+
+  .liquid-motion {
+    animation: liquidFloat 6s ease-in-out infinite;
+  }
+
+  @keyframes liquidFloat {
+    0%, 100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(-9px);
+      opacity: 0.95;
+    }
+  }
+
+  .stagger-fade-in {
+    animation: staggerFadeIn 0.45s ease-out both;
+  }
+
+  @keyframes staggerFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .glass-badge {
+    background: rgba(255, 255, 255, 0.24);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: hsl(240, 6%, 16%);
+  }
+}
+
+@layer utilities {
+  .bauhaus-gradient {
+    background: linear-gradient(135deg, #ff4728, #0091ff, #ffe700);
+    background-size: 400% 400%;
+    animation: hueShift 8s ease infinite;
+  }
+
+  @keyframes hueShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .focus-glow:focus-visible {
+    box-shadow: 0 0 0 3px rgba(38, 132, 255, 0.35);
+    outline: none;
+  }
+
+  .round-geometry {
+    border-radius: 1.25rem;
+    padding: 1rem;
+  }
+
+  .headline-bauhaus {
+    font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: hsl(241,100%,15%);
+  }
+}

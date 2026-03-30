@@ -8,7 +8,7 @@ from app.schemas.chat import (
 )
 from app.models.database import Chat, Message, User, Assessment
 from app.services.nlp_service import NLPService
-from app.services.openai_service import OpenAIService
+from app.services.custom_nlp_service import CustomNLPService
 from app.services.recommendation_service import RecommendationService
 from app.database import get_db
 from app.routes.auth import get_current_user
@@ -16,7 +16,7 @@ from datetime import datetime
 
 router = APIRouter()
 nlp_service = NLPService()
-openai_service = OpenAIService()
+custom_nlp_service = CustomNLPService()
 recommendation_service = RecommendationService()
 
 @router.post("/", response_model=ChatResponse)
@@ -109,7 +109,7 @@ async def send_message(chat_id: str,
     history = [{"sender": msg.sender, "content": msg.content} for msg in reversed(history_messages)]
 
     # Generate AI response
-    ai_response_data = await openai_service.generate_response(
+    ai_response_data = await custom_nlp_service.generate_response(
         message_data.content,
         context,
         history
@@ -170,7 +170,7 @@ async def generate_response(chat_id: str,
     history = [{"sender": msg.sender, "content": msg.content} for msg in history_result.scalars().all()]
 
     # Generate AI response
-    ai_response = await openai_service.generate_response(
+    ai_response = await custom_nlp_service.generate_response(
         request.message, context, history
     )
 

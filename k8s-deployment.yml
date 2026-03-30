@@ -1,0 +1,229 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: careeradviser-env-secrets
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql://postgres:password@postgres:5432/careeradviser"
+  JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+  OPENAI_API_KEY: ""
+  REDIS_URL: "redis://redis:6379/0"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: careeradviser-frontend
+  labels:
+    app: careeradviser-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: careeradviser-frontend
+  template:
+    metadata:
+      labels:
+        app: careeradviser-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: careeradviser/frontend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: VITE_API_URL
+          value: "http://api-gateway"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: careeradviser-frontend
+spec:
+  selector:
+    app: careeradviser-frontend
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: careeradviser-api
+  labels:
+    app: careeradviser-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: careeradviser-api
+  template:
+    metadata:
+      labels:
+        app: careeradviser-api
+    spec:
+      containers:
+      - name: api
+        image: careeradviser/api:latest
+        ports:
+        - containerPort: 3001
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: database-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: careeradviser-api
+spec:
+  selector:
+    app: careeradviser-api
+  ports:
+  - port: 3001
+    targetPort: 3001
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: careeradviser-ml
+  labels:
+    app: careeradviser-ml
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: careeradviser-ml
+  template:
+    metadata:
+      labels:
+        app: careeradviser-ml
+    spec:
+      containers:
+      - name: ml
+        image: careeradviser/ml:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: database-url
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: careeradviser-ml
+spec:
+  selector:
+    app: careeradviser-ml
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: careeradviser-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: careeradviser.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: careeradviser-frontend
+            port:
+              number: 3000
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: careeradviser-api
+            port:
+              number: 3001
+      - path: /ml
+        pathType: Prefix
+        backend:
+          service:
+            name: careeradviser-ml
+            port:
+              number: 8000

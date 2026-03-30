@@ -1,4 +1,4 @@
-# Career Anthem AI 
+# CareerAdviser
 
 An enterprise-grade AI-powered career guidance platform that provides personalized career recommendations, skill assessments, and intelligent chat conversations. Built with modern AI technologies and a hybrid architecture combining Node.js and Python backends.
 
@@ -99,36 +99,59 @@ Intelligent conversational experience:
 
 ##  System Architecture & Backend Services
 
-###  Hybrid Architecture Overview
+###  Enterprise Microservices Architecture
 
 ```
-┌──────────────────┬──────────────────┬──────────────────┐
-│   Frontend       │  Node.js API     │  Python ML API   │
-│   (React/Vite)   │  (Express/TS)    │  (FastAPI)       │
-├──────────────────┼──────────────────┼──────────────────┤
-│ Pages:           │ Routes:          │ Services:        │
-│ • Landing        │ • /auth/*        │ • AI Chat        │
-│ • Assessment     │ • /assessments/* │ • Recommendation │
-│ • Dashboard      │ • /chat/*        │ • NLP Analysis   │
-│ • AI Chat        │ • /user/*        │ • Embeddings     │
-├──────────────────┼──────────────────┼──────────────────┤
-│ State Management │ Authentication   │ ML Processing    │
-│ Query Caching    │ Database Ops     │ Vector Search    │
-│ Real-time Chat   │ API Gateway      │ OpenAI API       │
-└──────────────────┴──────────────────┴──────────────────┘
+┌──────────────────┬──────────────────┬──────────────────┬──────────────────┐
+│   API Gateway    │  Auth Service    │  Assessment      │  Chat/AI Service │
+│  (Nginx/Traefik) │  (JWT/OAuth)     │  Service         │  (Custom ML)     │
+├──────────────────┼──────────────────┼──────────────────┼──────────────────┤
+│ Load Balancing   │ User Management  │ Career Analysis  │ Conversational AI│
+│ Rate Limiting    │ Session Handling │ Skill Assessment │ Intent Recognition│
+│ Request Routing  │ Multi-tenant Auth│ ML Algorithms    │ Context Awareness│
+├──────────────────┼──────────────────┼──────────────────┼──────────────────┤
+│ Kubernetes       │ PostgreSQL       │ Redis Cache      │ ML Model Store   │
+│ Service Mesh     │ Per-Client DB    │ Session Cache    │ (MinIO/S3)       │
+└──────────────────┴──────────────────┴──────────────────┴──────────────────┘
                               │
                               ▼
                      ┌──────────────────┐
-                    │ PostgreSQL       │
-                    │ (Prisma ORM)     │
+                    │ Monitoring &       │
+                    │ Observability      │
+                    │ (Prometheus/Grafana│
                     └──────────────────┘
 ```
+
+###  Multi-Tenant Database Architecture
+- **Per-Client Isolation**: Each client can have its own PostgreSQL database connection string
+- **Data Sovereignty**: Client data never mixes or shares
+- **Scalable Schema**: Client-specific customizations supported with a `clientId` and `Client` registry
+- **SOC2 Compliance**: Audit trails and access controls
+
+#### Environment Variables for Databases
+- `DATABASE_URL`: master default DB (tenant catalog)
+- `CLIENT_DB_URL_<CLIENT_ID>`: per-client PostgreSQL URL override, e.g. `CLIENT_DB_URL_abc123="postgresql://user:pass@host:5432/client_db"`
+
+#### Redis Caching
+- `REDIS_URL=redis://localhost:6379/0`
+- use Redis for session and hot lookup caching
+
+#### JWT and API Keys
+- `JWT_SECRET` must be strong and unique per environment
+- `OPENAI_API_KEY` is optional in this branch (custom NLP logic is internal)
+
+###  Custom AI/ML Implementation
+- **No External Dependencies**: All algorithms implemented internally
+- **Hybrid Intelligence**: Rule-based + Machine Learning approaches
+- **Career Domain Expertise**: Specialized models for career guidance
+- **Continuous Learning**: Model retraining and improvement pipelines
 
 ###  Node.js Express Backend (`/server`)
 
 #### Authentication Routes (`/server/routes/auth.ts`)
-- **POST** `/auth/register` - User registration with bcrypt password hashing
-- **POST** `/auth/login` - JWT token generation and validation
+- **POST** `/auth/client-register` - New client signup (tenant database provisioning + migrations + admin user)
+- **POST** `/auth/register` - User registration inside existing client tenant (requires `clientId`)
+- **POST** `/auth/login` - JWT token generation and validation (requires `clientId`)
 - **GET** `/auth/me` - Current user profile retrieval
 - **Middleware**: JWT verification, CORS handling, input validation
 
@@ -151,12 +174,39 @@ Intelligent conversational experience:
 
 ###  Python FastAPI Backend (`/python-backend`)
 
-#### AI Chat Service (`/python-backend/app/services/openai_service.py`)
-- **OpenAI GPT-4o-mini Integration**: Advanced conversational AI
-- **Context Management**: Maintains conversation history
-- **Personality-Based Responses**: Adapts tone based on user profile
-- **Intent Classification**: Message intent analysis and routing
-- **Confidence Scoring**: AI response reliability metrics
+#### Custom NLP Service (`/python-backend/app/services/custom_nlp_service.py`)
+- **Hybrid AI Approach**: Combines rule-based responses with transformer-based conversational models
+- **Intent Classification**: TF-IDF similarity for message intent recognition
+- **Context-Aware Responses**: Personalized advice based on user assessment data
+- **Career Knowledge Base**: Domain-specific knowledge for career guidance
+- **Confidence Scoring**: Response reliability metrics
+- **Fallback Mechanisms**: Graceful degradation when ML models fail
+
+#### Custom NLP - Technical Implementation
+
+**Core Methods**:
+```python
+class CustomNLPService:
+    def __init__(self):
+        # DialoGPT for conversational AI
+        self.model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-medium")
+        
+        # TF-IDF intent classifier
+        self.intent_classifier = TfidfVectorizer()
+        
+        # Career-specific rule templates
+        self.rule_responses = {
+            "career_advice": ["Based on your {skills}, consider {careers}..."],
+            "skill_question": ["To develop {skill}, start with {resources}..."]
+        }
+    
+    async def generate_response(self, message, context, history):
+        # 1. Classify intent
+        # 2. Extract relevant context
+        # 3. Generate hybrid response (rules + ML)
+        # 4. Calculate confidence
+        # 5. Provide suggestions
+```
 
 #### NLP Processing Service (`/python-backend/app/services/nlp_service.py`)
 - **Text Analysis**: Sentiment and emotion detection
@@ -617,15 +667,17 @@ VITE_API_URL=http://localhost:3001
 
 #### Node.js Server (.env in root)
 ```bash
-DATABASE_URL="postgresql://username:password@localhost:5432/career_anthem_db"
+DATABASE_URL="postgresql://username:password@localhost:5432/careeradviser"
 JWT_SECRET="your-super-secret-jwt-key"
+REDIS_URL="redis://localhost:6379/0"
 PYTHON_BACKEND_URL="http://localhost:8000"
 ```
 
 #### Python Backend (python-backend/.env)
 ```bash
-DATABASE_URL="postgresql://username:password@localhost:5432/career_anthem_db"
-JWT_SECRET="your-super-secret-jwt-key"
+DATABASE_URL="postgresql+asyncpg://username:password@localhost:5432/careeradviser"
+SECRET_KEY="your-super-secret-jwt-key"
+REDIS_URL="redis://localhost:6379/0"
 OPENAI_API_KEY="your-openai-api-key"
 CORS_ORIGINS=["http://localhost:3000"]
 PORT=8000
@@ -633,40 +685,36 @@ PORT=8000
 
 ### 3. Database Setup
 ```bash
-# Install PostgreSQL and create database
-createdb career_anthem_db
+# Install PostgreSQL and create master catalog database
+createdb careeradviser
 
-# Run Prisma migrations
+# Run Prisma migrations for the central tenant registry
 npm run db:migrate
 
 # Generate Prisma client
 npm run db:generate
 ```
 
-### 4. Install Dependencies
+### 4. Create a new client tenant (API)
+- POST /api/auth/client-register
+- Body:
+  `{
+    "clientName": "AcmeCorp",
+    "domain": "acme.example.com",
+    "adminEmail": "admin@acme.example.com",
+    "adminPassword": "SecurePass123!",
+    "adminName": "Acme Admin"
+  }`
+- This endpoint will:
+  1. Create a new `clients` record
+  2. Create a dedicated PostgreSQL database for this client
+  3. Apply Prisma migrations to tenant DB
+  4. Create admin user in both central registry and tenant DB
+  5. Return tenant DB URL + token (token includes `clientId`)
 
-#### Frontend & Node.js Server
-```bash
-npm install
-# or
-bun install
-```
-
-#### Python Backend
-```bash
-cd python-backend
-pip install -r requirements.txt
-```
-
-### 5. Start Development Servers
-
-#### Option A: Start all services
-```bash
-# Start Node.js server (serves frontend + API)
-npm run dev
-
-# In another terminal, start Python backend
-cd python-backend
+### 5. Tenant-aware request flow
+- `Authorization: Bearer <token>` (token payload includes `clientId`)
+- `assessment` and other tenant resources use client DB via `clientId` + `databaseUrl` to select tenant DB in runtime
 python main.py
 ```
 

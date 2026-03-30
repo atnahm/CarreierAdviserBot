@@ -171,7 +171,7 @@ const AssessmentFlow = ({ onComplete, onBack }: AssessmentFlowProps) => {
                 <StepIcon className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">{currentStepData.title}</h1>
+                <h1 className="text-2xl font-bold font-cursive">{currentStepData.title}</h1>
                 <p className="text-muted-foreground">{currentStepData.description}</p>
               </div>
             </div>

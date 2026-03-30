@@ -64,6 +64,11 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      fontFamily: {
+        sans: ['Times New Roman', 'serif'],
+        mono: ['Lucida Console', 'monospace'],
+        cursive: ['cursive'],
+      },
       backgroundImage: {
         "gradient-primary": "var(--gradient-primary)",
         "gradient-secondary": "var(--gradient-secondary)",

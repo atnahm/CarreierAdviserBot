@@ -141,9 +141,9 @@ const AIChat = ({ onBack }: AIChatProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-100 to-violet-100">
       {/* Header */}
-      <div className="border-b border-border/40 bg-background/95 backdrop-blur-sm">
+      <div className="glass-panel mx-4 mt-6 mb-6 p-4 md:p-6 md:mx-12">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon" onClick={onBack}>
@@ -166,8 +166,8 @@ const AIChat = ({ onBack }: AIChatProps) => {
 
       {/* Chat Interface */}
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <Card className="h-[calc(100vh-200px)] flex flex-col">
-          <CardHeader className="border-b">
+        <Card className="glass-card h-[calc(100vh-200px)] flex flex-col liquid-motion">
+          <CardHeader className="border-b border-border/40">
             <CardTitle className="flex items-center space-x-2">
               <Bot className="h-5 w-5 text-ai-primary" />
               <span>Career Guidance Chat</span>
@@ -187,10 +187,10 @@ const AIChat = ({ onBack }: AIChatProps) => {
                         </AvatarFallback>
                       </Avatar>
                       
-                      <div className={`rounded-lg p-3 ${
+                      <div className={`rounded-2xl p-4 shadow-md transition-transform duration-200 ${
                         message.sender === "user" 
-                          ? "bg-ai-primary text-white" 
-                          : "bg-muted"
+                          ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white transform hover:scale-[1.01]"
+                          : "glass-card bg-white/45 text-slate-900"
                       }`}>
                         <div className="text-sm whitespace-pre-line">{message.content}</div>
                         <div className="text-xs opacity-70 mt-1">
@@ -226,7 +226,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
                           <Bot className="h-4 w-4" />
                         </AvatarFallback>
                       </Avatar>
-                      <div className="bg-muted rounded-lg p-3">
+                      <div className="glass-card bg-white/30 rounded-2xl p-3">
                         <div className="flex space-x-1">
                           <div className="w-2 h-2 bg-ai-primary rounded-full animate-pulse"></div>
                           <div className="w-2 h-2 bg-ai-primary rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>

@@ -2,9 +2,20 @@ import express from 'express';
 import OpenAI from 'openai';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { getTenantPrismaClient } from '../utils/tenant.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+const getPrismaClientForRequest = async (req: AuthRequest): Promise<PrismaClient> => {
+  const clientId = req.user?.clientId;
+  if (!clientId) throw new Error('clientId missing in token');
+
+  const client = await prisma.client.findUnique({ where: { id: clientId } });
+  if (!client?.databaseUrl) throw new Error('Client database URL not found');
+
+  return getTenantPrismaClient(client.databaseUrl);
+};
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -17,11 +28,14 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     const userId = req.user!.id;
     const { assessmentId } = req.body;
 
+    const tenantPrisma = await getPrismaClientForRequest(req);
+
     // Create chat session
-    const chat = await prisma.chat.create({
+    const chat = await tenantPrisma.chat.create({
       data: {
         userId,
         assessmentId,
+        clientId: req.user!.clientId!,
       },
     });
 
@@ -46,11 +60,14 @@ router.post('/:chatId/messages', authenticateToken, async (req: AuthRequest, res
       return res.status(400).json({ error: 'Message content is required' });
     }
 
+    const tenantPrisma = await getPrismaClientForRequest(req);
+
     // Verify chat belongs to user
-    const chat = await prisma.chat.findFirst({
+    const chat = await tenantPrisma.chat.findFirst({
       where: {
         id: chatId,
         userId,
+        clientId: req.user!.clientId,
       },
       include: {
         assessment: true,
@@ -66,7 +83,7 @@ router.post('/:chatId/messages', authenticateToken, async (req: AuthRequest, res
     }
 
     // Save user message
-    const userMessage = await prisma.message.create({
+    const userMessage = await tenantPrisma.message.create({
       data: {
         chatId,
         content,
@@ -139,7 +156,7 @@ Always respond in a helpful, personalized manner that considers their unique pro
     }
 
     // Save AI response
-    const aiMessage = await prisma.message.create({
+    const aiMessage = await tenantPrisma.message.create({
       data: {
         chatId,
         content: aiResponse,
@@ -150,7 +167,7 @@ Always respond in a helpful, personalized manner that considers their unique pro
     });
 
     // Update chat last activity
-    await prisma.chat.update({
+    await tenantPrisma.chat.update({
       where: { id: chatId },
       data: { lastActivity: new Date() },
     });
@@ -176,11 +193,14 @@ router.get('/:chatId/messages', authenticateToken, async (req: AuthRequest, res)
 
     const limitNum = parseInt(limit as string, 10);
 
+    const tenantPrisma = await getPrismaClientForRequest(req);
+
     // Verify chat belongs to user
-    const chat = await prisma.chat.findFirst({
+    const chat = await tenantPrisma.chat.findFirst({
       where: {
         id: chatId,
         userId,
+        clientId: req.user!.clientId,
       },
     });
 
@@ -189,7 +209,7 @@ router.get('/:chatId/messages', authenticateToken, async (req: AuthRequest, res)
     }
 
     // Get messages
-    const messages = await prisma.message.findMany({
+    const messages = await tenantPrisma.message.findMany({
       where: { chatId },
       orderBy: { timestamp: 'asc' },
       take: limitNum,

@@ -1,0 +1,41 @@
+# Multi-stage build for Python ML backend
+FROM python:3.11-slim AS base
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+FROM base AS deps
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Download ML models (cache layer)
+FROM deps AS models
+RUN python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
+    AutoTokenizer.from_pretrained('microsoft/DialoGPT-medium'); \
+    AutoModelForCausalLM.from_pretrained('microsoft/DialoGPT-medium')"
+
+# Production stage
+FROM python:3.11-slim AS runtime
+WORKDIR /app
+
+# Copy dependencies
+COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=deps /usr/local/bin /usr/local/bin
+
+# Copy models
+COPY --from=models /root/.cache/huggingface /root/.cache/huggingface
+
+# Copy application code
+COPY . .
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash app \
+    && chown -R app:app /app
+USER app
+
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

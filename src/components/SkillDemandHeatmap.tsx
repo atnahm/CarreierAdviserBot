@@ -127,9 +127,9 @@ const SkillDemandHeatmap = () => {
   const currentData = skillDemandData[selectedRegion as keyof typeof skillDemandData];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 glass-panel p-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Real-Time Skill Demand Heatmap</h2>
+        <h2 className="text-2xl md:text-3xl font-bold headline-bauhaus">Real-Time Skill Demand Heatmap</h2>
         <p className="text-muted-foreground">
           Live demand tracking across geographies and industries
         </p>
@@ -161,7 +161,7 @@ const SkillDemandHeatmap = () => {
 
       <div className="grid gap-4">
         {currentData.map((skill, index) => (
-          <Card key={index} className="hover:shadow-md transition-all duration-200">
+          <Card key={index} className="glass-card liquid-motion">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -222,7 +222,7 @@ const SkillDemandHeatmap = () => {
         ))}
       </div>
 
-      <Card className="bg-gradient-secondary border-ai-primary/20">
+      <Card className="glass-card bg-gradient-secondary border-ai-primary/20 liquid-motion">
         <CardContent className="p-6">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-ai-primary/10 rounded-lg">
